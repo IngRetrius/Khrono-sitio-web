@@ -1,0 +1,2829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHRONO KIDNAPPER — Rome never fell. It was taken.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+
+<!-- Preload all Niko sprite frames to prevent first-frame load errors -->
+<link rel="preload" as="image" href="uploads/niko_idle_01.png">
+<link rel="preload" as="image" href="uploads/niko_idle_02.png">
+<link rel="preload" as="image" href="uploads/niko_idle_03.png">
+<link rel="preload" as="image" href="uploads/niko_idle_04.png">
+<link rel="preload" as="image" href="uploads/niko_walk_01.png">
+<link rel="preload" as="image" href="uploads/niko_walk_02.png">
+<link rel="preload" as="image" href="uploads/niko_walk_03.png">
+<link rel="preload" as="image" href="uploads/niko_walk_04.png">
+<link rel="preload" as="image" href="uploads/niko_gladius_combo1_01.png">
+<link rel="preload" as="image" href="uploads/niko_gladius_combo1_02.png">
+<link rel="preload" as="image" href="uploads/niko_gladius_combo1_03.png">
+<link rel="preload" as="image" href="uploads/niko_gladius_combo1_04.png">
+<link rel="preload" as="image" href="uploads/niko_kick_01.png">
+<link rel="preload" as="image" href="uploads/niko_kick_02.png">
+<link rel="preload" as="image" href="uploads/niko_kick_03.png">
+<link rel="preload" as="image" href="uploads/niko_jump_01.png">
+<link rel="preload" as="image" href="uploads/niko_jump_02.png">
+
+<style>
+/* ============================================================
+   CSS CUSTOM PROPERTIES — CHRONO KIDNAPPER COLOR SYSTEM
+   ============================================================ */
+:root {
+  --gold:        #c9a84c;
+  --gold-dim:    #8a6e2f;
+  --gold-bright: #f0cc6e;
+  --red:         #8b1a1a;
+  --red-bright:  #c0392b;
+  --marble:      #e8e0d0;
+  --marble-dim:  #a09080;
+  --bg:          #0a0a0f;
+  --bg-mid:      #0f0f18;
+  --bg-card:     #12121e;
+  --bg-card2:    #1a1a2a;
+  --text:        #d4ccbc;
+  --text-dim:    #7a7060;
+
+  --font-head: 'Cinzel', 'Times New Roman', serif;
+  --font-body: 'Crimson Pro', Georgia, serif;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   GRAIN + SCANLINE OVERLAY
+   ============================================================ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.04) 2px,
+      rgba(0,0,0,0.04) 4px
+    );
+  animation: scanMove 8s linear infinite;
+}
+@keyframes scanMove {
+  from { background-position: 0 0; }
+  to   { background-position: 0 400px; }
+}
+
+/* Grain layer */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  animation: grainShift 0.4s steps(1) infinite;
+}
+@keyframes grainShift {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-5%, -5%); }
+  50%  { transform: translate(5%, 0); }
+  75%  { transform: translate(-5%, 5%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 48px;
+  background: linear-gradient(to bottom, rgba(10,10,15,0.95) 0%, transparent 100%);
+  transition: background 0.3s;
+}
+nav.scrolled {
+  background: rgba(10,10,15,0.97);
+  border-bottom: 1px solid rgba(201,168,76,0.15);
+}
+.nav-logo {
+  font-family: var(--font-head);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--gold);
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.nav-links {
+  display: flex;
+  gap: 36px;
+  list-style: none;
+}
+.nav-links a {
+  font-family: var(--font-head);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--marble-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--gold); }
+
+/* ============================================================
+   SECTION 1 — HERO
+   ============================================================ */
+#hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 700px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Three.js canvas */
+#hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* Roma background parallax layers in hero */
+.hero-bg-layer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 120%;
+  height: 100%;
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  z-index: 1;
+  opacity: 0.18;
+  will-change: transform;
+}
+.hero-bg-sky   { background-image: url('uploads/roma_sky.png');           opacity: 0.22; z-index: 1; }
+.hero-bg-far   { background-image: url('uploads/roma_buildings_far.png'); opacity: 0.20; z-index: 2; }
+.hero-bg-mid   { background-image: url('uploads/roma_buildings_mid.png'); opacity: 0.15; z-index: 3; }
+
+/* Dark vignette */
+.hero-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 50%, transparent 30%, rgba(10,10,15,0.85) 100%),
+    linear-gradient(to top, var(--bg) 0%, transparent 35%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 0 24px;
+  margin-top: -80px;
+}
+
+/* Year badge */
+.hero-year {
+  font-family: var(--font-head);
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  opacity: 0;
+}
+
+/* Title letter-by-letter spans */
+.hero-title {
+  font-family: var(--font-head);
+  font-size: clamp(42px, 7vw, 110px);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 0.9;
+  color: var(--gold);
+  text-shadow:
+    0 0 40px rgba(201,168,76,0.4),
+    0 0 80px rgba(201,168,76,0.15),
+    0 2px 8px rgba(0,0,0,0.8);
+  text-transform: uppercase;
+}
+.hero-title .letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(30px);
+}
+.hero-title .word-break {
+  display: block;
+  height: 0.05em;
+}
+
+.hero-subtitle {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: clamp(16px, 2.2vw, 24px);
+  color: var(--marble-dim);
+  letter-spacing: 0.08em;
+  opacity: 0;
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  opacity: 0;
+  margin-top: 8px;
+}
+
+/* Roman stone tablet buttons */
+.btn-stone {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 14px 32px;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(201,168,76,0.04) 100%);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.25s;
+  clip-path: polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px);
+}
+.btn-stone::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(201,168,76,0.12);
+  pointer-events: none;
+}
+.btn-stone:hover {
+  background: linear-gradient(135deg, rgba(201,168,76,0.18) 0%, rgba(201,168,76,0.08) 100%);
+  border-color: var(--gold);
+  color: var(--gold-bright);
+  box-shadow: 0 0 24px rgba(201,168,76,0.2), inset 0 0 16px rgba(201,168,76,0.05);
+}
+.btn-stone.secondary {
+  border-color: rgba(139,26,26,0.6);
+  color: #c87070;
+  background: linear-gradient(135deg, rgba(139,26,26,0.08) 0%, rgba(139,26,26,0.03) 100%);
+}
+.btn-stone.secondary:hover {
+  border-color: var(--red-bright);
+  color: #e09090;
+  box-shadow: 0 0 24px rgba(139,26,26,0.25);
+}
+
+/* Hero Niko sprite — idle animation at bottom center */
+.hero-niko {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  width: 220px;
+  height: 220px;
+  opacity: 0;
+  /* idle frames: 4 frames at 1024x1024 each */
+}
+.hero-niko img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 20px rgba(201,168,76,0.3)) drop-shadow(0 8px 30px rgba(0,0,0,0.7));
+}
+
+/* Scroll hint */
+.scroll-hint {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  animation: scrollHintFade 3s ease 2.5s forwards;
+}
+@keyframes scrollHintFade {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  30%  { opacity: 0.6; transform: translateX(-50%) translateY(0); }
+  70%  { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+.scroll-hint span {
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+}
+.scroll-arrow {
+  width: 18px;
+  height: 18px;
+  border-right: 1.5px solid var(--gold-dim);
+  border-bottom: 1.5px solid var(--gold-dim);
+  transform: rotate(45deg);
+  animation: arrowBounce 1.4s ease-in-out infinite;
+}
+@keyframes arrowBounce {
+  0%, 100% { transform: rotate(45deg) translateY(0); }
+  50%       { transform: rotate(45deg) translateY(5px); }
+}
+
+/* ============================================================
+   SECTION 2 — ABOUT
+   ============================================================ */
+#about {
+  position: relative;
+  padding: 120px 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-mid) 50%, var(--bg) 100%);
+}
+
+/* Marble texture simulation */
+#about::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image:
+    repeating-linear-gradient(105deg, transparent 0px, transparent 8px, rgba(232,224,208,0.6) 8px, rgba(232,224,208,0.6) 9px),
+    repeating-linear-gradient(15deg, transparent 0px, transparent 12px, rgba(232,224,208,0.3) 12px, rgba(232,224,208,0.3) 13px);
+  pointer-events: none;
+}
+
+.about-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.about-headline {
+  font-family: var(--font-head);
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--marble);
+  opacity: 0;
+  transform: translateX(-40px);
+}
+.about-headline em {
+  color: var(--gold);
+  font-style: normal;
+  display: block;
+}
+
+.about-divider {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(to right, var(--gold), transparent);
+  margin: 24px 0;
+  opacity: 0;
+}
+
+.about-text {
+  opacity: 0;
+  transform: translateX(40px);
+}
+.about-text p {
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.85;
+  margin-bottom: 16px;
+  font-weight: 300;
+}
+.about-text p strong {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* Roman ornament */
+.about-ornament {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+  opacity: 0.4;
+}
+.about-ornament::before,
+.about-ornament::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim));
+}
+.about-ornament::after {
+  background: linear-gradient(to left, transparent, var(--gold-dim));
+}
+.about-ornament span {
+  font-family: var(--font-head);
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   SECTION 3 — FEATURES
+   ============================================================ */
+#features {
+  padding: 100px 0;
+  background: var(--bg-mid);
+  position: relative;
+}
+#features::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+  opacity: 0.3;
+}
+#features::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+  opacity: 0.3;
+}
+
+.section-label {
+  font-family: var(--font-head);
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-family: var(--font-head);
+  font-size: clamp(22px, 3vw, 36px);
+  font-weight: 700;
+  color: var(--marble);
+  text-align: center;
+  letter-spacing: 0.08em;
+  margin-bottom: 64px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.feature-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.12);
+  padding: 40px 32px;
+  position: relative;
+  cursor: default;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+  transform-style: preserve-3d;
+}
+.feature-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  pointer-events: none;
+  transition: border-color 0.3s;
+}
+.feature-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 40px rgba(201,168,76,0.12), inset 0 0 40px rgba(201,168,76,0.03);
+}
+.feature-card:hover::before {
+  border-color: rgba(201,168,76,0.15);
+}
+
+/* Corner accents on cards */
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: -1px; right: -1px;
+  width: 20px; height: 20px;
+  border-top: 2px solid var(--gold-dim);
+  border-right: 2px solid var(--gold-dim);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.feature-card:hover::after { opacity: 1; }
+
+.card-number {
+  font-family: var(--font-head);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--gold-dim);
+  margin-bottom: 20px;
+  display: block;
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 20px;
+  opacity: 0.7;
+}
+
+.card-title {
+  font-family: var(--font-head);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--marble);
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+  line-height: 1.3;
+}
+
+.card-body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--text-dim);
+  line-height: 1.8;
+  font-weight: 300;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+.tag {
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.2);
+  padding: 4px 10px;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   SECTION 4 — GAMEPLAY SHOWCASE
+   ============================================================ */
+#gameplay {
+  position: relative;
+  padding: 100px 48px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.gameplay-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* CRT monitor frame */
+.crt-frame {
+  position: relative;
+  margin: 0 auto;
+  max-width: 900px;
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.crt-bezel {
+  background: linear-gradient(145deg, #2a2a35, #1a1a22, #0f0f18);
+  border-radius: 16px;
+  padding: 24px 24px 40px;
+  box-shadow:
+    0 0 0 2px #0a0a0f,
+    0 0 0 4px #2a2830,
+    0 20px 60px rgba(0,0,0,0.8),
+    inset 0 2px 0 rgba(255,255,255,0.05);
+  position: relative;
+}
+
+/* CRT brand label */
+.crt-brand {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: rgba(201,168,76,0.3);
+  text-transform: uppercase;
+}
+
+.crt-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #050508;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 30px rgba(0,0,0,0.5),
+    inset 0 0 1px rgba(255,255,255,0.05);
+}
+
+/* CRT screen glow */
+.crt-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(100,160,255,0.04) 0%, transparent 70%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Scanline overlay on screen */
+.crt-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,0.15) 3px,
+    rgba(0,0,0,0.15) 4px
+  );
+  z-index: 11;
+  pointer-events: none;
+}
+
+/* Parallax layers inside screen */
+.screen-layer {
+  position: absolute;
+  bottom: 0;
+  height: 100%;
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  background-position: left bottom;
+  will-change: transform;
+}
+
+.screen-sky {
+  left: 0;
+  width: 200%;
+  background-image: url('uploads/roma_sky.png');
+  background-size: cover;
+  animation: scrollSky 60s linear infinite;
+  filter: saturate(0.6) brightness(0.5) hue-rotate(200deg);
+  z-index: 1;
+}
+.screen-far {
+  left: 0;
+  width: 200%;
+  background-image: url('uploads/roma_buildings_far.png');
+  background-size: cover;
+  animation: scrollFar 40s linear infinite;
+  filter: saturate(0.4) brightness(0.35) hue-rotate(200deg);
+  z-index: 2;
+}
+.screen-mid {
+  left: 0;
+  width: 200%;
+  background-image: url('uploads/roma_buildings_mid.png');
+  background-size: cover;
+  animation: scrollMid 25s linear infinite;
+  filter: saturate(0.3) brightness(0.25) hue-rotate(200deg);
+  z-index: 3;
+}
+
+/* Ground in screen */
+.screen-ground {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 18%;
+  background: linear-gradient(to top, #1a1008, #100c04, transparent);
+  z-index: 4;
+}
+
+/* Walking Niko in the screen */
+.screen-niko {
+  position: absolute;
+  bottom: 14%;
+  left: 10%;
+  width: 80px;
+  height: 80px;
+  z-index: 5;
+  image-rendering: pixelated;
+  filter: brightness(0.85);
+  transform: scaleX(-1);
+}
+
+@keyframes scrollSky { from { transform: translateX(0); }   to { transform: translateX(-50%); } }
+@keyframes scrollFar { from { transform: translateX(0); }   to { transform: translateX(-50%); } }
+@keyframes scrollMid { from { transform: translateX(0); }   to { transform: translateX(-50%); } }
+
+/* HUD overlay */
+.screen-hud {
+  position: absolute;
+  top: 12px; left: 12px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hud-bar-label {
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  color: rgba(201,168,76,0.8);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.hud-bar {
+  width: 100px;
+  height: 6px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.hud-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #c9a84c, #f0cc6e);
+  animation: hudPulse 2s ease-in-out infinite;
+}
+.hud-bar-fill.red { background: linear-gradient(to right, #8b1a1a, #c0392b); animation: none; width: 65%; }
+@keyframes hudPulse {
+  0%, 100% { width: 80%; }
+  50%       { width: 75%; }
+}
+
+.hud-score {
+  position: absolute;
+  top: 12px; right: 12px;
+  z-index: 8;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: rgba(201,168,76,0.8);
+  letter-spacing: 0.08em;
+}
+
+/* ============================================================
+   SECTION 5 — CHARACTER
+   ============================================================ */
+#character {
+  padding: 120px 0;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-mid) 50%, var(--bg) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background marble veins */
+#character::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background:
+    repeating-linear-gradient(80deg, transparent 0, transparent 40px, rgba(232,224,208,0.5) 40px, rgba(232,224,208,0.5) 41px),
+    repeating-linear-gradient(170deg, transparent 0, transparent 60px, rgba(232,224,208,0.3) 60px, rgba(232,224,208,0.3) 61px);
+  pointer-events: none;
+}
+
+.character-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+/* Niko artwork area */
+.char-art {
+  position: relative;
+  height: 560px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  transform: translateX(-60px);
+}
+
+/* Atmospheric backdrop for character */
+.char-art-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 80% at 50% 100%, rgba(201,168,76,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(139,26,26,0.04) 0%, transparent 70%);
+}
+.char-art-border {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(201,168,76,0.1);
+}
+.char-art-border::before {
+  content: '';
+  position: absolute;
+  top: 12px; left: 12px; right: 12px; bottom: 12px;
+  border: 1px solid rgba(201,168,76,0.05);
+}
+
+/* Corner decorations */
+.char-corner {
+  position: absolute;
+  width: 30px; height: 30px;
+  border-color: var(--gold-dim);
+  border-style: solid;
+  opacity: 0.5;
+}
+.char-corner.tl { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
+.char-corner.tr { top: 6px; right: 6px; border-width: 2px 2px 0 0; }
+.char-corner.bl { bottom: 6px; left: 6px; border-width: 0 0 2px 2px; }
+.char-corner.br { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }
+
+.char-sprite {
+  position: relative;
+  z-index: 2;
+  width: 320px;
+  height: 440px;
+  object-fit: contain;
+  object-position: bottom center;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 30px rgba(201,168,76,0.2)) drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+  transition: filter 0.4s;
+}
+.char-art:hover .char-sprite {
+  filter: drop-shadow(0 0 50px rgba(201,168,76,0.35)) drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+}
+
+/* Character codex / stats */
+.char-codex {
+  opacity: 0;
+  transform: translateX(40px);
+}
+
+.codex-header {
+  font-family: var(--font-head);
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.codex-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--gold-dim), transparent);
+  opacity: 0.4;
+}
+
+.codex-name {
+  font-family: var(--font-head);
+  font-size: clamp(38px, 5vw, 64px);
+  font-weight: 900;
+  color: var(--marble);
+  letter-spacing: 0.1em;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.codex-class {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-style: italic;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  margin-bottom: 40px;
+}
+
+.codex-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid rgba(201,168,76,0.15);
+}
+.stat-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(201,168,76,0.08);
+  gap: 24px;
+}
+.stat-label {
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  min-width: 90px;
+  padding-top: 3px;
+  flex-shrink: 0;
+}
+.stat-value {
+  font-family: var(--font-body);
+  font-size: 17px;
+  color: var(--text);
+  line-height: 1.5;
+}
+.stat-value .ability {
+  display: inline-block;
+  font-size: 14px;
+  color: var(--gold);
+  border: 1px solid rgba(201,168,76,0.25);
+  padding: 3px 10px;
+  margin: 3px 6px 3px 0;
+  font-family: var(--font-head);
+  letter-spacing: 0.08em;
+  font-style: normal;
+}
+.stat-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #5dbb5d;
+  font-size: 14px;
+}
+.stat-active::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #5dbb5d;
+  box-shadow: 0 0 8px #5dbb5d;
+  animation: activePulse 2s ease-in-out infinite;
+}
+@keyframes activePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ============================================================
+   SECTION 5.5 — BUSINESS MODELS
+   ============================================================ */
+#business {
+  position: relative;
+  padding: 110px 0 130px;
+  background: var(--bg);
+  overflow: hidden;
+}
+#business::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+  opacity: 0.3;
+}
+#business::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+  opacity: 0.3;
+}
+
+/* Marble veining like #about */
+#business .marble-tex {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image:
+    repeating-linear-gradient(105deg, transparent 0px, transparent 8px, rgba(232,224,208,0.6) 8px, rgba(232,224,208,0.6) 9px),
+    repeating-linear-gradient(15deg, transparent 0px, transparent 12px, rgba(232,224,208,0.3) 12px, rgba(232,224,208,0.3) 13px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.business-inner {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 48px;
+  z-index: 1;
+}
+
+.business-intro {
+  max-width: 720px;
+  margin: 0 auto 64px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+
+.models-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+@media (max-width: 980px) {
+  .models-grid { grid-template-columns: 1fr; gap: 24px; }
+}
+
+.model-card {
+  position: relative;
+  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card2) 100%);
+  border: 1px solid rgba(201,168,76,0.15);
+  padding: 36px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.model-card.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+.model-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 50px rgba(201,168,76,0.15), inset 0 0 30px rgba(201,168,76,0.04);
+}
+
+/* Top corners as decorative L */
+.model-card::before,
+.model-card::after {
+  content: '';
+  position: absolute;
+  width: 22px; height: 22px;
+  border-top: 2px solid var(--gold-dim);
+  pointer-events: none;
+  transition: border-color 0.3s;
+}
+.model-card::before { top: -1px; left: -1px; border-left: 2px solid var(--gold-dim); }
+.model-card::after  { top: -1px; right: -1px; border-right: 2px solid var(--gold-dim); }
+.model-card:hover::before,
+.model-card:hover::after { border-color: var(--gold); }
+
+.model-numeral {
+  font-family: var(--font-head);
+  font-size: 12px;
+  letter-spacing: 0.4em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.model-name {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--marble);
+  text-transform: uppercase;
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+
+.model-tagline {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+  margin-bottom: 24px;
+}
+
+/* Big visual block per model */
+.model-visual {
+  position: relative;
+  height: 180px;
+  margin: 8px 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at center, rgba(201,168,76,0.08) 0%, transparent 70%),
+    linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%);
+  border-top: 1px solid rgba(201,168,76,0.1);
+  border-bottom: 1px solid rgba(201,168,76,0.1);
+}
+
+.model-visual svg {
+  max-width: 100%;
+  max-height: 100%;
+  filter: drop-shadow(0 0 16px rgba(201,168,76,0.25));
+}
+
+.model-price {
+  font-family: var(--font-head);
+  font-weight: 900;
+  color: var(--gold-bright);
+  text-shadow:
+    0 0 18px rgba(240,204,110,0.35),
+    0 2px 4px rgba(0,0,0,0.6);
+  text-align: center;
+  line-height: 1;
+}
+.model-price .currency { font-size: 14px; vertical-align: top; margin-right: 2px; }
+.model-price .integer  { font-size: 44px; }
+.model-price .decimal  { font-size: 18px; vertical-align: top; }
+
+.model-price-sub {
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.model-body {
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  color: var(--text);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.model-pros {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.model-pros li {
+  position: relative;
+  padding-left: 22px;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+.model-pros li::before {
+  content: '◆';
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+  font-size: 10px;
+  top: 4px;
+}
+
+.model-fit {
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid rgba(201,168,76,0.12);
+  font-family: var(--font-head);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  text-align: center;
+}
+.model-fit strong {
+  color: var(--marble);
+  font-weight: 600;
+}
+
+/* Tag badges row */
+.model-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 22px;
+}
+.model-tags .tag-pill {
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.25);
+  padding: 4px 9px;
+  background: rgba(201,168,76,0.04);
+}
+.model-tags .tag-pill.red {
+  color: #c87070;
+  border-color: rgba(139,26,26,0.4);
+  background: rgba(139,26,26,0.05);
+}
+
+/* "Recomendado" stamp */
+.model-stamp {
+  position: absolute;
+  top: 20px;
+  right: -8px;
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  font-weight: 700;
+  color: var(--red-bright);
+  background: rgba(10,10,15,0.9);
+  border: 1px solid var(--red);
+  padding: 6px 14px 6px 10px;
+  text-transform: uppercase;
+  z-index: 2;
+  clip-path: polygon(0% 0%, 100% 0%, calc(100% - 6px) 50%, 100% 100%, 0% 100%);
+  transform: rotate(2deg);
+}
+
+/* ============================================================
+   SECTION 6 — NEWSLETTER / CTA
+   ============================================================ */
+#newsletter {
+  position: relative;
+  padding: 120px 48px;
+  background: var(--bg-mid);
+  overflow: hidden;
+  text-align: center;
+}
+
+#newsletter-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.newsletter-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.newsletter-headline {
+  font-family: var(--font-head);
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 700;
+  color: var(--marble);
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  opacity: 0;
+}
+.newsletter-headline em {
+  color: var(--gold);
+  font-style: normal;
+}
+
+.newsletter-sub {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-style: italic;
+  color: var(--marble-dim);
+  margin-bottom: 48px;
+  opacity: 0;
+}
+
+.newsletter-form {
+  display: flex;
+  gap: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  opacity: 0;
+}
+
+.newsletter-input {
+  flex: 1;
+  background: rgba(201,168,76,0.04);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-right: none;
+  color: var(--marble);
+  font-family: var(--font-body);
+  font-size: 16px;
+  padding: 14px 20px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.newsletter-input::placeholder { color: var(--text-dim); }
+.newsletter-input:focus {
+  border-color: rgba(201,168,76,0.5);
+  background: rgba(201,168,76,0.07);
+}
+
+.newsletter-btn {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--gold-dim), #6a4e1f);
+  border: 1px solid var(--gold-dim);
+  color: var(--bg);
+  cursor: pointer;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+.newsletter-btn:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  box-shadow: 0 0 30px rgba(201,168,76,0.3);
+}
+
+.newsletter-disclaimer {
+  margin-top: 20px;
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  opacity: 0;
+}
+
+/* ============================================================
+   SECTION 7 — FOOTER
+   ============================================================ */
+footer {
+  position: relative;
+  background: var(--bg);
+  border-top: 1px solid rgba(201,168,76,0.1);
+  overflow: hidden;
+}
+
+.footer-top {
+  padding: 60px 48px 40px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-logo {
+  font-family: var(--font-head);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-transform: uppercase;
+  line-height: 1;
+}
+.footer-logo span {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.5em;
+  color: var(--gold-dim);
+  margin-top: 6px;
+}
+
+.footer-socials {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.footer-socials a {
+  font-family: var(--font-head);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.footer-socials a:hover { color: var(--gold); }
+.social-icon {
+  width: 16px; height: 16px;
+  opacity: 0.6;
+}
+
+.footer-bottom {
+  position: relative;
+  height: 80px;
+  border-top: 1px solid rgba(201,168,76,0.06);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.footer-copyright {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Walking Niko in footer */
+.footer-niko {
+  position: absolute;
+  bottom: 0;
+  width: 56px;
+  height: 56px;
+  image-rendering: pixelated;
+  will-change: transform;
+  filter: drop-shadow(0 2px 8px rgba(201,168,76,0.15));
+}
+
+/* ============================================================
+   SPRITE ANIMATION SYSTEM
+   ============================================================ */
+
+/* Sprite animations handled by JS animator — no CSS content-swap needed */
+
+/* ============================================================
+   GOLD DIVIDER ORNAMENT
+   ============================================================ */
+.divider-ornament {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  max-width: 300px;
+  margin: 0 auto 60px;
+  opacity: 0.35;
+}
+.divider-ornament::before,
+.divider-ornament::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gold-dim);
+}
+.divider-ornament-center {
+  width: 6px; height: 6px;
+  background: var(--gold-dim);
+  transform: rotate(45deg);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  nav { padding: 16px 24px; }
+  .nav-links { display: none; }
+
+  .about-inner { grid-template-columns: 1fr; gap: 40px; }
+  .about-headline { transform: none !important; }
+  .about-text { transform: none !important; }
+
+  .features-grid { grid-template-columns: 1fr; padding: 0 24px; }
+
+  #gameplay { padding: 80px 24px; }
+
+  .character-inner { grid-template-columns: 1fr; gap: 40px; }
+  .char-art { height: 360px; transform: none !important; }
+  .char-codex { transform: none !important; }
+
+  .newsletter-form { flex-direction: column; }
+  .newsletter-input { border-right: 1px solid rgba(201,168,76,0.2); border-bottom: none; }
+
+  .footer-top { flex-direction: column; gap: 24px; }
+}
+
+/* ============================================================
+   TWEAKS PANEL
+   ============================================================ */
+#tweaks-panel {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  background: rgba(12,12,20,0.97);
+  border: 1px solid rgba(201,168,76,0.25);
+  padding: 20px 24px;
+  width: 260px;
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  font-family: var(--font-head);
+}
+#tweaks-panel.visible { display: flex; }
+
+.tweaks-title {
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tweaks-close {
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  font-size: 14px;
+  color: var(--gold);
+}
+.tweaks-close:hover { opacity: 1; }
+
+.tweak-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tweak-label {
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+}
+.tweak-row {
+  display: flex;
+  gap: 6px;
+}
+.tweak-btn {
+  flex: 1;
+  font-family: var(--font-head);
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 7px 4px;
+  border: 1px solid rgba(201,168,76,0.2);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tweak-btn.active,
+.tweak-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(201,168,76,0.08);
+}
+.tweak-range {
+  width: 100%;
+  accent-color: var(--gold);
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     NAVIGATION
+     ============================================================ -->
+<nav id="main-nav">
+  <a href="#hero" class="nav-logo">Chrono Kidnapper</a>
+  <ul class="nav-links">
+    <li><a href="#about">Historia</a></li>
+    <li><a href="#features">Mecánicas</a></li>
+    <li><a href="#gameplay">Gameplay</a></li>
+    <li><a href="#character">Niko</a></li>
+    <li><a href="#business">Modelos</a></li>
+    <li><a href="#newsletter">Wishlist</a></li>
+    <li><a href="brand-guide.html">Marca</a></li>
+  </ul>
+</nav>
+
+<!-- ============================================================
+     SECTION 1 — HERO
+     ============================================================ -->
+<section id="hero">
+  <!-- Three.js canvas for particle system -->
+  <canvas id="hero-canvas"></canvas>
+
+  <!-- Roma background parallax layers (darkened) -->
+  <div class="hero-bg-layer hero-bg-sky" id="bg-sky"></div>
+  <div class="hero-bg-layer hero-bg-far" id="bg-far"></div>
+  <div class="hero-bg-layer hero-bg-mid" id="bg-mid"></div>
+
+  <!-- Vignette -->
+  <div class="hero-vignette"></div>
+
+  <!-- Main content -->
+  <div class="hero-content">
+    <div class="hero-year">Un microondas defectuoso. Toda la historia, en riesgo.</div>
+    <h1 class="hero-title" id="hero-title">
+      <span class="word" id="word1"></span>
+      <span class="word-break"></span>
+      <span class="word" id="word2"></span>
+    </h1>
+    <p class="hero-subtitle" id="hero-subtitle">Él solo quería reparar el microondas.</p>
+    <div class="hero-ctas" id="hero-ctas">
+      <a href="#newsletter" class="btn-stone">Wishlist en Steam</a>
+      <a href="#gameplay" class="btn-stone secondary">Ver Gameplay</a>
+    </div>
+  </div>
+
+  <!-- Niko idle sprite at bottom -->
+  <div class="hero-niko" id="hero-niko">
+    <img id="hero-niko-img" src="uploads/niko_idle_01.png" alt="Niko — Chrono Gladiator">
+  </div>
+
+  <!-- Scroll hint -->
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 2 — ABOUT
+     ============================================================ -->
+<section id="about">
+  <div class="about-inner">
+    <div>
+      <h2 class="about-headline" id="about-headline">
+        Un tipo en pijama.<br><em>Un microondas<br>fusionado a su espalda.</em>
+      </h2>
+      <div class="about-divider" id="about-divider"></div>
+      <div class="about-ornament">
+        <span>Chrono Kidnapper</span>
+      </div>
+    </div>
+    <div class="about-text" id="about-text">
+      <p>Una tormenta eléctrica, un cable mal conectado y un destello de luz después — el microondas quedó <strong>fusionado a la espalda de Niko</strong> y lo lanzó al Foro Romano en el año 44 a.C., todavía en pijama, todavía con sueño.</p>
+      <p>Desde entonces, el dispositivo se activa de forma aleatoria, arrastrando a Niko a los <strong>momentos más críticos de la historia humana</strong>. Y hay un efecto colateral: cada activación secuestra a la persona más cercana. Sin quererlo, ya se llevó a Julio César. Ya reescribió el mundo.</p>
+      <p>Ahora <strong>Los Cronos</strong> lo persiguen — una fuerza que existe fuera del tiempo y quiere borrarlo de la existencia. Su líder, <em>El Relojero</em>, no negociará. Niko solo quiere volver a casa.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 3 — FEATURES
+     ============================================================ -->
+<section id="features">
+  <p class="section-label">Mecánicas</p>
+  <h2 class="section-title">Cinco Eras. Un Solo Microondas.</h2>
+
+  <div class="features-grid">
+
+    <!-- Card 1 -->
+    <div class="feature-card" id="feat-1">
+      <span class="card-number">I</span>
+      <svg class="card-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="8" y1="40" x2="34" y2="14" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="32" y="8" width="8" height="8" rx="1" fill="#8a6e2f" stroke="#c9a84c" stroke-width="1.5"/>
+        <circle cx="12" cy="36" r="3" fill="#8b1a1a" stroke="#c9a84c" stroke-width="1"/>
+        <path d="M20 20 L28 12" stroke="rgba(201,168,76,0.4)" stroke-width="1" stroke-dasharray="2 2"/>
+        <path d="M16 32 L10 38" stroke="rgba(201,168,76,0.4)" stroke-width="1" stroke-dasharray="2 2"/>
+      </svg>
+      <h3 class="card-title">Armas de Cada Época</h3>
+      <p class="card-body">Gladius romana, sable otomano, khopesh egipcia, mosquete francés. Cada arma redefine tu estilo de combate en cada capítulo histórico.</p>
+      <div class="card-tags">
+        <span class="tag">Beat 'em up</span>
+        <span class="tag">Combate lateral</span>
+        <span class="tag">5 armas únicas</span>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="feature-card" id="feat-2">
+      <span class="card-number">II</span>
+      <svg class="card-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="14" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
+        <line x1="24" y1="10" x2="24" y2="24" stroke="#c9a84c" stroke-width="2" stroke-linecap="round"/>
+        <line x1="24" y1="24" x2="32" y2="28" stroke="#8a6e2f" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="24" cy="24" r="2" fill="#c9a84c"/>
+        <line x1="24" y1="4" x2="24" y2="7" stroke="#c9a84c" stroke-width="1.5"/>
+        <line x1="24" y1="41" x2="24" y2="44" stroke="#c9a84c" stroke-width="1.5"/>
+        <line x1="4" y1="24" x2="7" y2="24" stroke="#c9a84c" stroke-width="1.5"/>
+        <line x1="41" y1="24" x2="44" y2="24" stroke="#c9a84c" stroke-width="1.5"/>
+      </svg>
+      <h3 class="card-title">Historia que Cambia</h3>
+      <p class="card-body">Cada capítulo termina con una pantalla de consecuencias: descubre qué pasó cuando Julio César no llegó al Senado, o cuando Atatürk desapareció antes de fundar Turquía.</p>
+      <div class="card-tags">
+        <span class="tag">5 capítulos</span>
+        <span class="tag">Múltiples finales</span>
+        <span class="tag">Enciclopedia real</span>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="feature-card" id="feat-3">
+      <span class="card-number">III</span>
+      <svg class="card-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="12" width="20" height="16" rx="2" fill="#1a1408" stroke="#c9a84c" stroke-width="1.5"/>
+        <rect x="10" y="14" width="16" height="10" fill="#0a0a10" stroke="#8a6e2f" stroke-width="1"/>
+        <rect x="30" y="10" width="10" height="20" rx="1" fill="#1a1408" stroke="#c9a84c" stroke-width="1.5"/>
+        <rect x="32" y="14" width="6" height="6" fill="#1a3010" stroke="#3a7030" stroke-width="1"/>
+        <circle cx="35" cy="26" r="1.5" fill="#8b1a1a"/>
+        <line x1="28" y1="20" x2="30" y2="20" stroke="#c9a84c" stroke-width="1"/>
+        <rect x="12" y="28" width="8" height="3" rx="1" fill="#8a6e2f"/>
+        <rect x="22" y="28" width="4" height="3" rx="1" fill="#2a2010"/>
+      </svg>
+      <h3 class="card-title">El Microondas como Vida</h3>
+      <p class="card-body">La batería del microondas es tu barra de energía. La comida típica de cada época te cura — pan romano, baklava otomano, baguette francesa. Muere la batería, muere Niko.</p>
+      <div class="card-tags">
+        <span class="tag">Sistema original</span>
+        <span class="tag">Comida histórica</span>
+        <span class="tag">Los Cronos</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 4 — GAMEPLAY SHOWCASE
+     ============================================================ -->
+<section id="gameplay">
+  <div class="gameplay-inner">
+    <p class="section-label">Gameplay</p>
+    <h2 class="section-title">Roma, 44 a.C. — El primer salto.</h2>
+
+    <div class="crt-frame" id="crt-frame">
+      <div class="crt-bezel">
+        <div class="crt-screen" id="crt-screen">
+
+          <!-- Parallax background layers -->
+          <div class="screen-layer screen-sky"></div>
+          <div class="screen-layer screen-far"></div>
+          <div class="screen-layer screen-mid"></div>
+          <div class="screen-ground"></div>
+
+          <!-- Walking Niko inside game screen -->
+          <img class="screen-niko" id="screen-niko-img"
+               src="uploads/niko_walk_01.png" alt="">
+
+          <!-- HUD overlay -->
+          <div class="screen-hud">
+            <div class="hud-bar-label">HP</div>
+            <div class="hud-bar"><div class="hud-bar-fill red"></div></div>
+            <div class="hud-bar-label" style="margin-top:8px">TIME</div>
+            <div class="hud-bar"><div class="hud-bar-fill"></div></div>
+          </div>
+          <div class="hud-score">SCORE&nbsp;&nbsp;012480</div>
+
+        </div>
+        <div class="crt-brand">CHRONO · VISION · MKXLIV</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 5 — CHARACTER
+     ============================================================ -->
+<section id="character">
+  <div class="character-inner">
+
+    <!-- Left: Niko artwork -->
+    <div class="char-art" id="char-art">
+      <div class="char-art-bg"></div>
+      <div class="char-art-border"></div>
+      <div class="char-corner tl"></div>
+      <div class="char-corner tr"></div>
+      <div class="char-corner bl"></div>
+      <div class="char-corner br"></div>
+      <img class="char-sprite" id="char-sprite-img"
+           src="uploads/niko_gladius_combo1_01.png" alt="Niko — Chrono Gladiator">
+    </div>
+
+    <!-- Right: Codex stats -->
+    <div class="char-codex" id="char-codex">
+      <div class="codex-header">Ficha del Personaje</div>
+      <div class="codex-name">NIKO</div>
+      <div class="codex-class">Viajero Accidental · Sin entrenamiento previo</div>
+
+      <div class="codex-stats">
+        <div class="stat-row">
+          <span class="stat-label">Ocupación</span>
+          <span class="stat-value">Técnico de electrodomésticos (desempleado)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Equipo</span>
+          <span class="stat-value">Microondas fusionado · Pijama de rayas · Pantuflas rojas · Control remoto de TV</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Armas</span>
+          <span class="stat-value">
+            <span class="ability">Gladius romana</span>
+            <span class="ability">Sable otomano</span>
+            <span class="ability">Khopesh egipcia</span>
+            <span class="ability">Mosquete francés</span>
+          </span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Enemigo</span>
+          <span class="stat-value">Los Cronos — liderados por <em>El Relojero</em></span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Estado</span>
+          <span class="stat-value">
+            <span class="stat-active">Activo — 44 a.C., Foro Romano</span>
+          </span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Objetivo</span>
+          <span class="stat-value">Quitarse el microondas de la espalda y volver a casa. Primero, sobrevivir a la historia.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 5.5 — BUSINESS MODELS
+     ============================================================ -->
+<section id="business">
+  <div class="marble-tex"></div>
+  <div class="business-inner">
+    <p class="section-label">Modelo Comercial</p>
+    <h2 class="section-title">Tres caminos para que la historia llegue al mercado.</h2>
+    <p class="business-intro">
+      Chrono Kidnapper es un plataformero narrativo de un solo jugador, sin PvP ni servicios en vivo.
+      Eso descarta loot boxes, gachas y suscripciones. Quedan tres modelos coherentes con el género,
+      la audiencia indie y la promesa educativa del juego.
+      <br><br>
+      <strong style="color:var(--gold);">Estrategia: volumen, no margen.</strong>
+      Pricing por debajo del estándar indie LatAm para maximizar wishlist conversion, reducir piratería
+      y construir base instalada amplia. Entrada desde <strong style="color:var(--gold-bright);">COL$ 5.000</strong>,
+      techo en <strong style="color:var(--gold-bright);">COL$ 14.900</strong> por SKU individual.
+      <br><span style="font-size:13px;color:var(--gold-dim);letter-spacing:0.05em;">Steam Colombia — mayo 2026, TRM ~$3.747 COP/USD</span>
+    </p>
+
+    <div class="models-grid">
+
+      <!-- ===== MODEL I — PREMIUM ===== -->
+      <article class="model-card" id="model-1">
+        <div class="model-numeral">Modelo I</div>
+        <h3 class="model-name">Premium</h3>
+        <p class="model-tagline">Compra única. Juego completo. Sin atajos.</p>
+
+        <div class="model-visual" aria-hidden="true">
+          <!-- Roman gold coin with denomination -->
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="coinGrad" cx="50%" cy="40%" r="60%">
+                <stop offset="0%" stop-color="#f6d97a"/>
+                <stop offset="55%" stop-color="#c9a84c"/>
+                <stop offset="100%" stop-color="#6b5320"/>
+              </radialGradient>
+            </defs>
+            <!-- Outer rim -->
+            <circle cx="100" cy="100" r="78" fill="url(#coinGrad)" stroke="#8a6e2f" stroke-width="2"/>
+            <!-- Inner laurel ring -->
+            <circle cx="100" cy="100" r="62" fill="none" stroke="#6b5320" stroke-width="1.2" stroke-dasharray="4 3"/>
+            <!-- Laurel branches -->
+            <path d="M40 100 Q35 80 50 70 Q45 90 55 100" fill="none" stroke="#6b5320" stroke-width="1.5"/>
+            <path d="M160 100 Q165 80 150 70 Q155 90 145 100" fill="none" stroke="#6b5320" stroke-width="1.5"/>
+            <!-- Center denomination -->
+            <text x="100" y="92" text-anchor="middle" font-family="Cinzel, serif" font-size="14" font-weight="700" fill="#3a2810" letter-spacing="2">SPQR</text>
+            <text x="100" y="118" text-anchor="middle" font-family="Cinzel, serif" font-size="26" font-weight="900" fill="#3a2810">XIX</text>
+            <text x="100" y="138" text-anchor="middle" font-family="Cinzel, serif" font-size="10" fill="#6b5320" letter-spacing="2">DENARII</text>
+            <!-- Coin highlight -->
+            <ellipse cx="78" cy="68" rx="20" ry="8" fill="#fff5cc" opacity="0.35"/>
+          </svg>
+        </div>
+
+        <div class="model-price">
+          <span class="currency">COL$</span><span class="integer">14.900</span>
+        </div>
+        <p class="model-price-sub">Acceso total · Una sola compra · ref. USD ~$4</p>
+
+        <div class="model-tags">
+          <span class="tag-pill">Steam</span>
+          <span class="tag-pill">itch.io</span>
+          <span class="tag-pill">PC</span>
+          <span class="tag-pill">Switch (post-launch)</span>
+        </div>
+
+        <p class="model-body">
+          Precio de combo callejero. Una sola compra desbloquea las cinco eras, todas las armas,
+          la Enciclopedia completa y los cuatro finales. Pricing tipo <em>Vampire Survivors</em> ($4.99 USD):
+          la barrera psicológica desaparece y la gente lo compra por impulso.
+        </p>
+
+        <ul class="model-pros">
+          <li><strong>1/3 del precio de Hollow Knight</strong> en Colombia (COL$ 37.500) → conversión muy alta.</li>
+          <li><strong>Anti-piratería</strong>: a este precio comprar es más fácil que crackear.</li>
+          <li><strong>Buzz orgánico</strong>: TikToks y streams se viralizan más cuando es "barato".</li>
+          <li><strong>Bundle-ready</strong> en Humble Bundle / Fanatical desde día uno.</li>
+        </ul>
+
+        <div class="model-fit"><strong>Encaje</strong> · IP nueva sin reputación previa · LatAm-first</div>
+      </article>
+
+      <!-- ===== MODEL II — EPISÓDICO ===== -->
+      <article class="model-card" id="model-2">
+        <div class="model-stamp">Recomendado</div>
+        <div class="model-numeral">Modelo II</div>
+        <h3 class="model-name">Episódico</h3>
+        <p class="model-tagline">Cinco eras, cinco lanzamientos.</p>
+
+        <div class="model-visual" aria-hidden="true">
+          <!-- Timeline with 5 chapter nodes -->
+          <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- Horizontal line -->
+            <line x1="20" y1="80" x2="260" y2="80" stroke="#8a6e2f" stroke-width="2"/>
+            <line x1="20" y1="80" x2="260" y2="80" stroke="#c9a84c" stroke-width="0.5" stroke-dasharray="3 2"/>
+            <!-- 5 nodes / chapter capsules -->
+            <!-- Cap 1 Roma -->
+            <g transform="translate(40,80)">
+              <circle r="14" fill="#1a1a2a" stroke="#c9a84c" stroke-width="2"/>
+              <text y="5" text-anchor="middle" font-family="Cinzel" font-size="12" font-weight="700" fill="#c9a84c">I</text>
+              <text y="-22" text-anchor="middle" font-family="Cinzel" font-size="8" fill="#8a6e2f" letter-spacing="1">ROMA</text>
+              <text y="36" text-anchor="middle" font-family="Cinzel" font-size="7" fill="#5dbb5d" letter-spacing="1">LIVE</text>
+            </g>
+            <!-- Cap 2 Turquia -->
+            <g transform="translate(95,80)">
+              <circle r="14" fill="#1a1a2a" stroke="#c9a84c" stroke-width="2"/>
+              <text y="5" text-anchor="middle" font-family="Cinzel" font-size="12" font-weight="700" fill="#c9a84c">II</text>
+              <text y="-22" text-anchor="middle" font-family="Cinzel" font-size="8" fill="#8a6e2f" letter-spacing="1">TURQUIA</text>
+              <text y="36" text-anchor="middle" font-family="Cinzel" font-size="7" fill="#5dbb5d" letter-spacing="1">LIVE</text>
+            </g>
+            <!-- Cap 3 Alemania -->
+            <g transform="translate(150,80)">
+              <circle r="12" fill="#0f0f18" stroke="#6b5320" stroke-width="1.5"/>
+              <text y="5" text-anchor="middle" font-family="Cinzel" font-size="11" fill="#6b5320">III</text>
+              <text y="-22" text-anchor="middle" font-family="Cinzel" font-size="8" fill="#6b5320" letter-spacing="1">ALEMANIA</text>
+              <text y="36" text-anchor="middle" font-family="Cinzel" font-size="7" fill="#6b5320">Q2 '26</text>
+            </g>
+            <!-- Cap 4 Egipto -->
+            <g transform="translate(205,80)">
+              <circle r="12" fill="#0f0f18" stroke="#6b5320" stroke-width="1.5"/>
+              <text y="5" text-anchor="middle" font-family="Cinzel" font-size="11" fill="#6b5320">IV</text>
+              <text y="-22" text-anchor="middle" font-family="Cinzel" font-size="8" fill="#6b5320" letter-spacing="1">EGIPTO</text>
+              <text y="36" text-anchor="middle" font-family="Cinzel" font-size="7" fill="#6b5320">Q4 '26</text>
+            </g>
+            <!-- Cap 5 Francia -->
+            <g transform="translate(255,80)">
+              <circle r="12" fill="#0f0f18" stroke="#6b5320" stroke-width="1.5"/>
+              <text y="5" text-anchor="middle" font-family="Cinzel" font-size="11" fill="#6b5320">V</text>
+              <text y="-22" text-anchor="middle" font-family="Cinzel" font-size="8" fill="#6b5320" letter-spacing="1">FRANCIA</text>
+              <text y="36" text-anchor="middle" font-family="Cinzel" font-size="7" fill="#6b5320">Q2 '27</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="model-price">
+          <span class="currency">COL$</span><span class="integer">5.000</span>
+        </div>
+        <p class="model-price-sub">Por capítulo · Season pass (5 caps) COL$ 14.900 · ref. USD ~$1.30 / ~$4</p>
+
+        <div class="model-tags">
+          <span class="tag-pill">Cap 1 disponible</span>
+          <span class="tag-pill">Cap 2 listo</span>
+          <span class="tag-pill red">Cap 3-5 roadmap</span>
+        </div>
+
+        <p class="model-body">
+          Lanzamiento por capítulos a lo largo de 12-18 meses. Cada era se libera cuando está pulida.
+          A COL$ 5.000 cada capítulo cuesta menos que un tinto premium o un pasaje de Transmilenio.
+          El que compra el Cap 1 por impulso vuelve cada 3 meses por el siguiente.
+        </p>
+
+        <ul class="model-pros">
+          <li><strong>Entrada COL$ 5.000</strong>: cero fricción mental, compra impulsiva en TikTok / shorts.</li>
+          <li><strong>Hype 5 veces</strong>: cada capítulo es prensa nueva, no un solo lanzamiento.</li>
+          <li><strong>LTV mayor que premium</strong>: 5 micro-compras suman más conversión que una grande.</li>
+          <li><strong>Ya alineado</strong>: el código soporta Cap 1 + Cap 2 completos en build settings.</li>
+        </ul>
+
+        <div class="model-fit"><strong>Encaje</strong> · narrativa de 5 saltos · viralidad por capítulo</div>
+      </article>
+
+      <!-- ===== MODEL III — PREMIUM + DLC ÉTICO ===== -->
+      <article class="model-card" id="model-3">
+        <div class="model-numeral">Modelo III</div>
+        <h3 class="model-name">Premium + DLC</h3>
+        <p class="model-tagline">Base completa + extras opcionales nunca P2W.</p>
+
+        <div class="model-visual" aria-hidden="true">
+          <!-- Open chest with floating items -->
+          <svg viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="chestGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#704020"/>
+                <stop offset="100%" stop-color="#3a2010"/>
+              </linearGradient>
+              <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#f0cc6e" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#f0cc6e" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <!-- Glow from inside chest -->
+            <ellipse cx="120" cy="120" rx="80" ry="40" fill="url(#glowGrad)"/>
+            <!-- Chest body -->
+            <rect x="60" y="110" width="120" height="50" fill="url(#chestGrad)" stroke="#1a0a04" stroke-width="1.5"/>
+            <!-- Chest lid open (back) -->
+            <path d="M60 110 Q60 80 80 70 L160 70 Q180 80 180 110 Z" fill="#1a0a04" stroke="#3a2010" stroke-width="1"/>
+            <!-- Gold trim -->
+            <line x1="60" y1="135" x2="180" y2="135" stroke="#c9a84c" stroke-width="1.5"/>
+            <line x1="120" y1="110" x2="120" y2="160" stroke="#c9a84c" stroke-width="1"/>
+            <!-- Lock -->
+            <rect x="114" y="130" width="12" height="14" fill="#c9a84c" stroke="#3a2010" stroke-width="0.6"/>
+            <circle cx="120" cy="137" r="2" fill="#3a2010"/>
+            <!-- Floating items above -->
+            <!-- Pijama icon -->
+            <g transform="translate(80,52)">
+              <rect x="-8" y="-8" width="16" height="16" fill="#5da9e0" stroke="#c9a84c" stroke-width="0.8"/>
+              <line x1="-8" y1="-2" x2="8" y2="-2" stroke="#fff" stroke-width="0.5"/>
+              <line x1="-8" y1="2" x2="8" y2="2" stroke="#fff" stroke-width="0.5"/>
+            </g>
+            <text x="80" y="80" text-anchor="middle" font-family="Cinzel" font-size="6" fill="#8a6e2f" letter-spacing="1">SKIN</text>
+            <!-- Tome icon (enciclopedia) -->
+            <g transform="translate(120,42)">
+              <rect x="-10" y="-12" width="20" height="22" fill="#c9a84c" stroke="#3a2010" stroke-width="0.8"/>
+              <rect x="-9" y="-11" width="18" height="20" fill="#1a1a2a"/>
+              <line x1="-6" y1="-7" x2="6" y2="-7" stroke="#c9a84c" stroke-width="0.5"/>
+              <line x1="-6" y1="-3" x2="6" y2="-3" stroke="#c9a84c" stroke-width="0.5"/>
+              <line x1="-6" y1="1" x2="6" y2="1" stroke="#c9a84c" stroke-width="0.5"/>
+              <line x1="-6" y1="5" x2="6" y2="5" stroke="#c9a84c" stroke-width="0.5"/>
+            </g>
+            <text x="120" y="65" text-anchor="middle" font-family="Cinzel" font-size="6" fill="#8a6e2f" letter-spacing="1">CODEX</text>
+            <!-- Audio commentary icon -->
+            <g transform="translate(160,52)">
+              <circle r="9" fill="none" stroke="#c9a84c" stroke-width="1"/>
+              <path d="M-4 -3 L-4 3 L0 0 Z" fill="#c9a84c"/>
+              <path d="M2 -4 Q5 0 2 4" stroke="#c9a84c" stroke-width="0.8" fill="none"/>
+              <path d="M4 -6 Q9 0 4 6" stroke="#c9a84c" stroke-width="0.6" fill="none" opacity="0.6"/>
+            </g>
+            <text x="160" y="80" text-anchor="middle" font-family="Cinzel" font-size="6" fill="#8a6e2f" letter-spacing="1">AUDIO</text>
+            <!-- Sparkles -->
+            <circle cx="92" cy="35" r="1.5" fill="#f0cc6e"/>
+            <circle cx="148" cy="30" r="1.2" fill="#f0cc6e"/>
+            <circle cx="105" cy="20" r="1" fill="#fff5cc"/>
+            <circle cx="135" cy="22" r="0.9" fill="#fff5cc"/>
+          </svg>
+        </div>
+
+        <div class="model-price">
+          <span class="currency">COL$</span><span class="integer">14.900</span>
+        </div>
+        <p class="model-price-sub">Base · DLC desde COL$ 1.900 · ref. USD ~$4 base, ~$0.50+ DLC</p>
+
+        <div class="model-tags">
+          <span class="tag-pill">Cosméticos</span>
+          <span class="tag-pill">Codex Histórico</span>
+          <span class="tag-pill">Audio comentario</span>
+          <span class="tag-pill red">Nunca pay-to-win</span>
+        </div>
+
+        <p class="model-body">
+          Juego base completo al mismo precio del Modelo I. Encima se venden DLC opcionales que <em>no afectan al gameplay</em>:
+          skins de pijama (COL$ 1.900), expansiones del Codex con datos curados por historiadores (COL$ 5.900)
+          y pistas de audio comentado (COL$ 3.900). Cada micro-compra es menor que un dulce de tienda de barrio.
+        </p>
+
+        <ul class="model-pros">
+          <li><strong>ARPU mayor sin subir el ticket</strong>: 30% de la base instalada agarra al menos un DLC barato.</li>
+          <li><strong>Refuerza el ángulo educativo</strong>: el DLC Codex puede entrar a programas escolares.</li>
+          <li><strong>Comunidad creadora</strong>: skins por modders/fanart con revenue share.</li>
+          <li><strong>Limpio en prensa</strong>: "nunca P2W" se comunica con orgullo, no a la defensiva.</li>
+        </ul>
+
+        <div class="model-fit"><strong>Encaje</strong> · Enciclopedia ya planeada en GDD como contenido base</div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 6 — NEWSLETTER / CTA
+     ============================================================ -->
+<section id="newsletter">
+  <canvas id="newsletter-canvas"></canvas>
+
+  <div class="newsletter-inner">
+    <div class="divider-ornament">
+      <div class="divider-ornament-center"></div>
+    </div>
+    <h2 class="newsletter-headline" id="nl-headline">
+      Sé el primero<br><em>cuando el tiempo se rompa.</em>
+    </h2>
+    <p class="newsletter-sub" id="nl-sub">
+      Únete a la legión. Los Cronos ya saben quién eres.
+    </p>
+    <div class="newsletter-form" id="nl-form">
+      <input type="email" class="newsletter-input" id="nl-email"
+             placeholder="your@email.com" autocomplete="off">
+      <button class="newsletter-btn" id="nl-btn" type="button">Unirse a la Legión</button>
+    </div>
+    <p class="newsletter-disclaimer" id="nl-disc">Sin spam. Solo despachos temporales.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 7 — FOOTER
+     ============================================================ -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-logo">
+      Chrono Kidnapper
+      <span>Plataformero 2D · PC · Próximamente</span>
+    </div>
+    <div class="footer-socials">
+      <a href="#" aria-label="Twitter/X">
+        <svg class="social-icon" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M12.6 2h2.2L9.7 7.7 15.5 14h-3.7l-3.5-4.6L4.2 14H2l5.5-6.1L1.6 2h3.7l3.2 4.2zm-.8 10.8h1.2L4.3 3.2H3z"/>
+        </svg>
+        X / Twitter
+      </a>
+      <a href="#" aria-label="Instagram">
+        <svg class="social-icon" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0C5.8 0 5.6 0 4.7 0 3.8 0 3.2.2 2.7.4c-.5.2-.9.5-1.3.9C1 1.7.7 2.1.5 2.7.2 3.2 0 3.8 0 4.7 0 5.6 0 5.8 0 8s0 2.4 0 3.3c0 .9.2 1.5.5 2 .2.5.5.9.9 1.3.4.4.8.7 1.3.9.5.2 1.1.4 2 .4.9 0 1.1 0 3.3 0s2.4 0 3.3 0c.9 0 1.5-.2 2-.5.5-.2.9-.5 1.3-.9.4-.4.7-.8.9-1.3.2-.5.4-1.1.4-2 0-.9 0-1.1 0-3.3s0-2.4 0-3.3c0-.9-.2-1.5-.5-2-.2-.5-.5-.9-.9-1.3C13.7.9 13.3.6 12.7.4 12.2.2 11.6 0 10.7 0 9.8 0 9.6 0 7.4 0zm.6 1.4c.2 0 .5 0 .6 0 2.1 0 2.4 0 3.2 0 .8 0 1.2.2 1.5.3.4.1.6.3.9.6.2.2.4.5.6.9.1.3.3.7.3 1.5 0 .8 0 1.1 0 3.2s0 2.4 0 3.2c0 .8-.2 1.2-.3 1.5-.1.4-.3.6-.6.9-.2.2-.5.4-.9.6-.3.1-.7.3-1.5.3-.8 0-1.1 0-3.2 0-2.1 0-2.4 0-3.2 0-.8 0-1.2-.2-1.5-.3-.4-.1-.6-.3-.9-.6-.2-.2-.4-.5-.6-.9-.1-.3-.3-.7-.3-1.5 0-.8 0-1.1 0-3.2s0-2.4 0-3.2c0-.8.2-1.2.3-1.5.1-.4.3-.6.6-.9.2-.2.5-.4.9-.6.3-.1.7-.3 1.5-.3zm-.4 2.3a3.3 3.3 0 1 0 0 6.6 3.3 3.3 0 0 0 0-6.6zm0 5.4a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2zm4.1-5.5a.8.8 0 1 1-1.6 0 .8.8 0 0 1 1.6 0z"/>
+        </svg>
+        Instagram
+      </a>
+      <a href="#" aria-label="itch.io">
+        <svg class="social-icon" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M0 1.2C.6.7 1.4.5 2.3.5c1.4 0 2.5.8 3.7 1.7 1.2.9 2.4 1.3 3.5 1.2 1.1-.1 2.2-.6 3.4-1.4C14 1.2 15.1.7 16 .7v1.1c-.7.2-1.5.7-2.3 1.3-1.2.8-2.5 1.4-3.8 1.5-1.3.1-2.7-.3-4-1.2C4.6 2.5 3.5 2 2.3 2 1.6 2 1 2.2.6 2.6L0 2.4V1.2zm0 3.6c.6-.5 1.4-.7 2.3-.7 1.4 0 2.5.8 3.7 1.7 1.2.9 2.4 1.3 3.5 1.2 1.1-.1 2.2-.6 3.4-1.4C14 4.8 15.1 4.3 16 4.3v1.1c-.7.2-1.5.7-2.3 1.3-1.2.8-2.5 1.4-3.8 1.5-1.3.1-2.7-.3-4-1.2C4.6 6.1 3.5 5.6 2.3 5.6c-.7 0-1.3.2-1.7.6L0 6V4.8zm0 3.6C.6 7.9 1.4 7.7 2.3 7.7c1.4 0 2.5.8 3.7 1.7 1.2.9 2.4 1.3 3.5 1.2 1.1-.1 2.2-.6 3.4-1.4C14 8.4 15.1 7.9 16 7.9V9c-.7.2-1.5.7-2.3 1.3-1.2.8-2.5 1.4-3.8 1.5-1.3.1-2.7-.3-4-1.2C4.6 9.7 3.5 9.2 2.3 9.2c-.7 0-1.3.2-1.7.6L0 9.6V8.4z"/>
+        </svg>
+        itch.io
+      </a>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <img class="footer-niko" id="footer-niko-img"
+         src="uploads/niko_walk_01.png" alt="">
+    <p class="footer-copyright">© 2026 Chrono Kidnapper — Todos los derechos reservados</p>
+  </div>
+</footer>
+
+<!-- ============================================================
+     TWEAKS PANEL
+     ============================================================ -->
+<div id="tweaks-panel">
+  <div class="tweaks-title">
+    Tweaks
+    <span class="tweaks-close" id="tweaks-close">✕</span>
+  </div>
+
+  <div class="tweak-item">
+    <div class="tweak-label">CRT Filter Intensity</div>
+    <input type="range" class="tweak-range" id="tweak-crt" min="0" max="100" value="40">
+  </div>
+
+  <div class="tweak-item">
+    <div class="tweak-label">Particle Mode</div>
+    <div class="tweak-row">
+      <button class="tweak-btn active" data-particle="gold">Gold Dust</button>
+      <button class="tweak-btn" data-particle="red">Blood Red</button>
+      <button class="tweak-btn" data-particle="marble">Marble</button>
+    </div>
+  </div>
+
+  <div class="tweak-item">
+    <div class="tweak-label">Hero Niko Pose</div>
+    <div class="tweak-row">
+      <button class="tweak-btn active" data-pose="idle">Idle</button>
+      <button class="tweak-btn" data-pose="combat">Combat</button>
+      <button class="tweak-btn" data-pose="kick">Kick</button>
+    </div>
+  </div>
+
+  <div class="tweak-item">
+    <div class="tweak-label">Grain Intensity</div>
+    <input type="range" class="tweak-range" id="tweak-grain" min="0" max="100" value="25">
+  </div>
+</div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+
+<!-- Three.js r152 via jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+
+<!-- GSAP 3.12 + ScrollTrigger -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<script>
+/* ============================================================
+   TWEAKS PROTOCOL — register listener FIRST, then announce
+   ============================================================ */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "crtIntensity": "45",
+  "particleMode": "gold",
+  "heroPose": "combat",
+  "grainIntensity": "41"
+}/*EDITMODE-END*/;
+
+let tweakState = { ...TWEAK_DEFAULTS };
+
+window.addEventListener('message', (e) => {
+  if (e.data && e.data.type === '__activate_edit_mode') {
+    document.getElementById('tweaks-panel').classList.add('visible');
+  }
+  if (e.data && e.data.type === '__deactivate_edit_mode') {
+    document.getElementById('tweaks-panel').classList.remove('visible');
+  }
+});
+window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+
+/* ============================================================
+   SPRITE ANIMATION UTILITY
+   ============================================================ */
+function createSpriteAnimator(imgEl, frames, fps) {
+  let idx = 0;
+  let interval = null;
+  return {
+    start() {
+      interval = setInterval(() => {
+        idx = (idx + 1) % frames.length;
+        imgEl.src = frames[idx];
+      }, 1000 / fps);
+    },
+    stop() { clearInterval(interval); },
+    setFrames(newFrames, newFps) {
+      clearInterval(interval);
+      frames = newFrames;
+      idx = 0;
+      imgEl.src = frames[0];
+      interval = setInterval(() => {
+        idx = (idx + 1) % frames.length;
+        imgEl.src = frames[idx];
+      }, 1000 / (newFps || fps));
+    }
+  };
+}
+
+const idleFrames  = ['uploads/niko_idle_01.png','uploads/niko_idle_02.png','uploads/niko_idle_03.png','uploads/niko_idle_04.png'];
+const walkFrames  = ['uploads/niko_walk_01.png','uploads/niko_walk_02.png','uploads/niko_walk_03.png','uploads/niko_walk_04.png'];
+const combatFrames= ['uploads/niko_gladius_combo1_01.png','uploads/niko_gladius_combo1_02.png','uploads/niko_gladius_combo1_03.png','uploads/niko_gladius_combo1_04.png'];
+const kickFrames  = ['uploads/niko_kick_01.png','uploads/niko_kick_02.png','uploads/niko_kick_03.png'];
+const jumpFrames  = ['uploads/niko_jump_01.png','uploads/niko_jump_02.png'];
+
+/* Preload all frames before starting animators */
+const allFrames = [...idleFrames, ...walkFrames, ...combatFrames, ...kickFrames, ...jumpFrames];
+let loadedCount = 0;
+function onFrameLoaded() {
+  loadedCount++;
+  if (loadedCount === allFrames.length) startAnimators();
+}
+allFrames.forEach(src => {
+  const img = new Image();
+  img.onload = onFrameLoaded;
+  img.onerror = onFrameLoaded; // don't block on error
+  img.src = src;
+});
+
+/* Hero Niko */
+const heroNikoImg = document.getElementById('hero-niko-img');
+const heroAnimator = createSpriteAnimator(heroNikoImg, idleFrames, 6);
+
+/* Screen Niko (in CRT gameplay) */
+const screenNikoImg = document.getElementById('screen-niko-img');
+const screenAnimator = createSpriteAnimator(screenNikoImg, walkFrames, 8);
+
+/* Character section Niko */
+const charSpriteImg = document.getElementById('char-sprite-img');
+const charAnimator = createSpriteAnimator(charSpriteImg, combatFrames, 5);
+
+/* Footer walking Niko */
+const footerNikoImg = document.getElementById('footer-niko-img');
+const footerAnimator = createSpriteAnimator(footerNikoImg, walkFrames, 7);
+
+function startAnimators() {
+  heroAnimator.start();
+  screenAnimator.start();
+  charAnimator.start();
+  footerAnimator.start();
+}
+
+// Footer Niko walk animation across the footer
+let footerNikoX = -80;
+const footerNiko = document.querySelector('.footer-niko');
+function walkFooterNiko() {
+  const footerW = document.querySelector('.footer-bottom').offsetWidth;
+  footerNikoX += 1.2;
+  if (footerNikoX > footerW + 20) footerNikoX = -80;
+  footerNiko.style.left = footerNikoX + 'px';
+  footerNiko.style.transform = 'scaleX(-1)';
+  requestAnimationFrame(walkFooterNiko);
+}
+walkFooterNiko();
+
+/* ============================================================
+   THREE.JS — HERO PARTICLE SYSTEM
+   ============================================================ */
+(function initThreeHero() {
+  const canvas = document.getElementById('hero-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.z = 5;
+
+  // Create particle geometry — marble column fragments + dust
+  const PARTICLE_COUNT = 280;
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(PARTICLE_COUNT * 3);
+  const sizes = new Float32Array(PARTICLE_COUNT);
+  const phases = new Float32Array(PARTICLE_COUNT); // for individual drift
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const r = 2.5 + Math.random() * 5;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = (Math.random() - 0.5) * Math.PI;
+    positions[i * 3]     = r * Math.cos(theta) * Math.cos(phi);
+    positions[i * 3 + 1] = r * Math.sin(phi) * 1.5;
+    positions[i * 3 + 2] = r * Math.sin(theta) * Math.cos(phi) - 3;
+    sizes[i] = 0.5 + Math.random() * 2.5;
+    phases[i] = Math.random() * Math.PI * 2;
+  }
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+  // Particle material — gold
+  const material = new THREE.PointsMaterial({
+    color: 0xc9a84c,
+    size: 0.06,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.7,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+
+  // Ambient light dust rings (larger faint discs)
+  const ringGeo = new THREE.BufferGeometry();
+  const ringPositions = new Float32Array(120 * 3);
+  for (let i = 0; i < 120; i++) {
+    const angle = (i / 120) * Math.PI * 2;
+    const r = 3 + Math.random() * 0.3;
+    ringPositions[i * 3]     = r * Math.cos(angle);
+    ringPositions[i * 3 + 1] = (Math.random() - 0.5) * 0.6;
+    ringPositions[i * 3 + 2] = r * Math.sin(angle) - 3;
+  }
+  ringGeo.setAttribute('position', new THREE.BufferAttribute(ringPositions, 3));
+  const ringMat = new THREE.PointsMaterial({ color: 0x8a6e2f, size: 0.03, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
+  const ring = new THREE.Points(ringGeo, ringMat);
+  scene.add(ring);
+
+  // Mouse parallax
+  let mouseX = 0, mouseY = 0;
+  let targetX = 0, targetY = 0;
+  document.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  // Particle color switching (for tweaks)
+  const PARTICLE_COLORS = {
+    gold:   0xc9a84c,
+    red:    0x8b1a1a,
+    marble: 0xe8e0d0,
+  };
+  window.__setParticleColor = (mode) => {
+    material.color.set(PARTICLE_COLORS[mode] || PARTICLE_COLORS.gold);
+  };
+
+  let lastTime = 0;
+  function animate(time) {
+    requestAnimationFrame(animate);
+    const delta = (time - lastTime) / 1000;
+    lastTime = time;
+
+    // Slow orbit
+    points.rotation.y += 0.0008;
+    ring.rotation.y += 0.0004;
+
+    // Individual particle float
+    const pos = geometry.attributes.position.array;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      pos[i * 3 + 1] += Math.sin(time * 0.0004 + phases[i]) * 0.0008;
+    }
+    geometry.attributes.position.needsUpdate = true;
+
+    // Mouse parallax — smooth
+    targetX += (mouseX * 0.12 - targetX) * 0.05;
+    targetY += (-mouseY * 0.08 - targetY) * 0.05;
+    camera.position.x = targetX;
+    camera.position.y = targetY;
+    camera.lookAt(scene.position);
+
+    renderer.render(scene, camera);
+  }
+  animate(0);
+
+  // Resize
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+
+/* ============================================================
+   THREE.JS — NEWSLETTER PARTICLE BURST
+   ============================================================ */
+(function initNewsletterParticles() {
+  const canvas = document.getElementById('newsletter-canvas');
+  const section = document.getElementById('newsletter');
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+  camera.position.z = 1;
+
+  // Burst particles
+  const BURST = 120;
+  const bGeo = new THREE.BufferGeometry();
+  const bPos = new Float32Array(BURST * 3);
+  const bVel = new Float32Array(BURST * 3);
+  let bursting = false;
+  let burstTime = 0;
+
+  for (let i = 0; i < BURST; i++) {
+    bPos[i * 3] = 0; bPos[i * 3 + 1] = 0; bPos[i * 3 + 2] = 0;
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.004 + Math.random() * 0.012;
+    bVel[i * 3]     = Math.cos(angle) * speed;
+    bVel[i * 3 + 1] = Math.sin(angle) * speed;
+    bVel[i * 3 + 2] = 0;
+  }
+  bGeo.setAttribute('position', new THREE.BufferAttribute(bPos, 3));
+  const bMat = new THREE.PointsMaterial({ color: 0xc9a84c, size: 0.018, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const burst = new THREE.Points(bGeo, bMat);
+  scene.add(burst);
+
+  function triggerBurst() {
+    bursting = true;
+    burstTime = 0;
+    const pos = bGeo.attributes.position.array;
+    for (let i = 0; i < BURST; i++) {
+      pos[i * 3] = 0; pos[i * 3 + 1] = -0.05; pos[i * 3 + 2] = 0;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.005 + Math.random() * 0.015;
+      bVel[i * 3]     = Math.cos(angle) * speed;
+      bVel[i * 3 + 1] = Math.sin(angle) * speed * 0.6 + 0.006;
+    }
+    bGeo.attributes.position.needsUpdate = true;
+    bMat.opacity = 1;
+  }
+
+  document.getElementById('nl-btn').addEventListener('mouseenter', triggerBurst);
+  document.getElementById('nl-btn').addEventListener('click', (e) => {
+    const email = document.getElementById('nl-email').value;
+    if (email) {
+      document.getElementById('nl-btn').textContent = '¡Legión unida!';
+      triggerBurst();
+    }
+  });
+
+  function resize() {
+    const w = section.offsetWidth;
+    const h = section.offsetHeight;
+    renderer.setSize(w, h);
+    camera.left = -w/h;
+    camera.right = w/h;
+    camera.updateProjectionMatrix();
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let lastT = 0;
+  function animateBurst(t) {
+    requestAnimationFrame(animateBurst);
+    if (!bursting) { renderer.render(scene, camera); return; }
+    burstTime += 16;
+    const pos = bGeo.attributes.position.array;
+    for (let i = 0; i < BURST; i++) {
+      pos[i * 3]     += bVel[i * 3];
+      pos[i * 3 + 1] += bVel[i * 3 + 1];
+      bVel[i * 3 + 1] -= 0.00008; // gravity
+    }
+    bGeo.attributes.position.needsUpdate = true;
+    bMat.opacity = Math.max(0, 1 - burstTime / 1800);
+    if (burstTime > 1800) bursting = false;
+    renderer.render(scene, camera);
+  }
+  animateBurst(0);
+})();
+
+/* ============================================================
+   GSAP ANIMATIONS
+   ============================================================ */
+gsap.registerPlugin(ScrollTrigger);
+
+// ── Hero title: staggered letter animation
+function buildHeroTitle() {
+  const words = ['CHRONO', 'KIDNAPPER'];
+  words.forEach((word, wi) => {
+    const container = document.getElementById('word' + (wi + 1));
+    word.split('').forEach((char, ci) => {
+      const span = document.createElement('span');
+      span.classList.add('letter');
+      span.textContent = char;
+      if (char === ' ') span.style.width = '0.35em';
+      container.appendChild(span);
+    });
+    // Add space between words visually
+    if (wi === 0) {
+      const sp = document.createElement('span');
+      sp.style.display = 'inline-block';
+      sp.style.width = '0.2em';
+      container.appendChild(sp);
+    }
+  });
+}
+buildHeroTitle();
+
+// Animate letters in
+gsap.timeline({ delay: 0.3 })
+  .to('.hero-year', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' })
+  .to('.hero-title .letter', {
+    opacity: 1,
+    y: 0,
+    duration: 0.5,
+    stagger: 0.04,
+    ease: 'power3.out'
+  }, '-=0.2')
+  .to('#hero-subtitle', { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' }, '-=0.1')
+  .to('#hero-ctas', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.3')
+  .to('#hero-niko', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }, '-=0.4');
+
+// Pulsing gold glow on title
+gsap.to('.hero-title', {
+  textShadow: '0 0 60px rgba(201,168,76,0.6), 0 0 120px rgba(201,168,76,0.2), 0 2px 8px rgba(0,0,0,0.8)',
+  duration: 2.5,
+  repeat: -1,
+  yoyo: true,
+  ease: 'sine.inOut',
+  delay: 2
+});
+
+// ── About section
+gsap.fromTo('#about-headline',
+  { opacity: 0, x: -40 },
+  {
+    opacity: 1, x: 0, duration: 0.9, ease: 'power2.out',
+    scrollTrigger: { trigger: '#about', start: 'top 70%' }
+  }
+);
+gsap.fromTo('#about-divider',
+  { opacity: 0, scaleX: 0 },
+  {
+    opacity: 1, scaleX: 1, duration: 0.7, ease: 'power2.out', transformOrigin: 'left',
+    scrollTrigger: { trigger: '#about', start: 'top 65%' }
+  }
+);
+gsap.fromTo('#about-text',
+  { opacity: 0, x: 40 },
+  {
+    opacity: 1, x: 0, duration: 0.9, ease: 'power2.out',
+    scrollTrigger: { trigger: '#about', start: 'top 65%' }
+  }
+);
+
+// Hero parallax on scroll
+gsap.to('#bg-sky', {
+  yPercent: 20,
+  ease: 'none',
+  scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
+});
+gsap.to('#bg-far', {
+  yPercent: 30,
+  ease: 'none',
+  scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
+});
+gsap.to('#bg-mid', {
+  yPercent: 45,
+  ease: 'none',
+  scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
+});
+
+// ── Feature cards stagger
+gsap.fromTo(['#feat-1', '#feat-2', '#feat-3'],
+  { opacity: 0, y: 40 },
+  {
+    opacity: 1, y: 0, duration: 0.7, stagger: 0.15, ease: 'power2.out',
+    scrollTrigger: { trigger: '#features', start: 'top 70%' }
+  }
+);
+
+// ── Business model cards stagger
+gsap.fromTo(['#model-1', '#model-2', '#model-3'],
+  { opacity: 0, y: 40 },
+  {
+    opacity: 1, y: 0, duration: 0.8, stagger: 0.18, ease: 'power2.out',
+    scrollTrigger: { trigger: '#business', start: 'top 70%' }
+  }
+);
+
+// 3D tilt on feature cards
+document.querySelectorAll('.feature-card').forEach(card => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    gsap.to(card, {
+      rotateX: -dy * 6,
+      rotateY: dx * 6,
+      duration: 0.3,
+      ease: 'power1.out',
+      transformPerspective: 800
+    });
+  });
+  card.addEventListener('mouseleave', () => {
+    gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.5, ease: 'power2.out' });
+  });
+});
+
+// ── CRT frame reveal
+gsap.fromTo('#crt-frame',
+  { opacity: 0, y: 40 },
+  {
+    opacity: 1, y: 0, duration: 0.9, ease: 'power2.out',
+    scrollTrigger: { trigger: '#gameplay', start: 'top 70%' }
+  }
+);
+
+// ── Character section
+gsap.fromTo('#char-art',
+  { opacity: 0, x: -60 },
+  {
+    opacity: 1, x: 0, duration: 0.9, ease: 'power2.out',
+    scrollTrigger: { trigger: '#character', start: 'top 70%' }
+  }
+);
+gsap.fromTo('#char-codex',
+  { opacity: 0, x: 40 },
+  {
+    opacity: 1, x: 0, duration: 0.9, ease: 'power2.out', delay: 0.15,
+    scrollTrigger: { trigger: '#character', start: 'top 70%' }
+  }
+);
+
+// Character sprite changes on codex ability hover
+document.querySelectorAll('.ability').forEach((ab, i) => {
+  const poses = [combatFrames, kickFrames, jumpFrames, combatFrames];
+  ab.addEventListener('mouseenter', () => {
+    charAnimator.setFrames(poses[i % poses.length], 6);
+  });
+  ab.addEventListener('mouseleave', () => {
+    charAnimator.setFrames(combatFrames, 5);
+  });
+});
+
+// ── Newsletter section
+gsap.fromTo('#nl-headline',
+  { opacity: 0, y: 30 },
+  {
+    opacity: 1, y: 0, duration: 0.8, ease: 'power2.out',
+    scrollTrigger: { trigger: '#newsletter', start: 'top 70%' }
+  }
+);
+gsap.fromTo('#nl-sub',
+  { opacity: 0, y: 20 },
+  {
+    opacity: 1, y: 0, duration: 0.7, ease: 'power2.out', delay: 0.1,
+    scrollTrigger: { trigger: '#newsletter', start: 'top 70%' }
+  }
+);
+gsap.fromTo('#nl-form',
+  { opacity: 0, y: 20 },
+  {
+    opacity: 1, y: 0, duration: 0.7, ease: 'power2.out', delay: 0.2,
+    scrollTrigger: { trigger: '#newsletter', start: 'top 70%' }
+  }
+);
+gsap.fromTo('#nl-disc',
+  { opacity: 0 },
+  {
+    opacity: 0.4, duration: 0.6, delay: 0.4,
+    scrollTrigger: { trigger: '#newsletter', start: 'top 70%' }
+  }
+);
+
+/* ============================================================
+   NAV SCROLL EFFECT
+   ============================================================ */
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('main-nav');
+  if (window.scrollY > 60) nav.classList.add('scrolled');
+  else nav.classList.remove('scrolled');
+}, { passive: true });
+
+/* ============================================================
+   HERO PARALLAX ON MOUSE MOVE (BG LAYERS)
+   ============================================================ */
+document.addEventListener('mousemove', (e) => {
+  const cx = (e.clientX / window.innerWidth - 0.5);
+  const cy = (e.clientY / window.innerHeight - 0.5);
+  document.getElementById('bg-sky').style.transform = `translateX(${cx * -12}px) translateY(${cy * -6}px)`;
+  document.getElementById('bg-far').style.transform = `translateX(${cx * -20}px) translateY(${cy * -10}px)`;
+  document.getElementById('bg-mid').style.transform = `translateX(${cx * -30}px) translateY(${cy * -14}px)`;
+});
+
+/* ============================================================
+   TWEAKS PANEL INTERACTIONS
+   ============================================================ */
+document.getElementById('tweaks-close').addEventListener('click', () => {
+  document.getElementById('tweaks-panel').classList.remove('visible');
+  window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+});
+
+// CRT intensity
+document.getElementById('tweak-crt').addEventListener('input', (e) => {
+  const v = e.target.value / 100;
+  tweakState.crtIntensity = e.target.value;
+  document.querySelector('#crt-screen::after'); // CSS only, approximate via overlay
+  document.getElementById('crt-screen').style.filter = `contrast(${1 + v * 0.3}) saturate(${1 - v * 0.4})`;
+  window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { crtIntensity: tweakState.crtIntensity } }, '*');
+});
+
+// Particle mode buttons
+document.querySelectorAll('[data-particle]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-particle]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    tweakState.particleMode = btn.dataset.particle;
+    window.__setParticleColor && window.__setParticleColor(btn.dataset.particle);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { particleMode: tweakState.particleMode } }, '*');
+  });
+});
+
+// Hero pose buttons
+document.querySelectorAll('[data-pose]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-pose]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    tweakState.heroPose = btn.dataset.pose;
+    const poseMap = { idle: idleFrames, combat: combatFrames, kick: kickFrames };
+    heroAnimator.setFrames(poseMap[btn.dataset.pose] || idleFrames, 6);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { heroPose: tweakState.heroPose } }, '*');
+  });
+});
+
+// Grain intensity
+document.getElementById('tweak-grain').addEventListener('input', (e) => {
+  const v = e.target.value / 100;
+  tweakState.grainIntensity = e.target.value;
+  document.body.style.setProperty('--grain-opacity', v * 0.05);
+  // Approximate: adjust body::after opacity via a style element
+  let grainStyle = document.getElementById('grain-override');
+  if (!grainStyle) {
+    grainStyle = document.createElement('style');
+    grainStyle.id = 'grain-override';
+    document.head.appendChild(grainStyle);
+  }
+  grainStyle.textContent = `body::after { opacity: ${v * 0.06} !important; }`;
+  window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { grainIntensity: tweakState.grainIntensity } }, '*');
+});
+
+// Apply initial tweak state
+document.getElementById('tweak-crt').value = tweakState.crtIntensity;
+document.getElementById('tweak-grain').value = tweakState.grainIntensity;
+const initialCRT = tweakState.crtIntensity / 100;
+document.getElementById('crt-screen').style.filter = `contrast(${1 + initialCRT * 0.3}) saturate(${1 - initialCRT * 0.4})`;
+
+</script>
+</body>
+</html>
