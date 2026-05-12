@@ -1395,6 +1395,79 @@ nav.scrolled {
 .econ-philosophy strong { color: var(--gold); font-style: normal; }
 
 /* ============================================================
+   SECTION 5.8 — INGRESOS / PROYECCIÓN DE VENTAS
+   ============================================================ */
+#revenue { position: relative; padding: 110px 0 130px; background: var(--bg); overflow: hidden; }
+#revenue::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background: linear-gradient(to right, transparent, var(--gold-dim), transparent); opacity:0.3; }
+#revenue .marble-tex { position:absolute; inset:0; opacity:0.03; pointer-events:none; z-index:0;
+  background-image: repeating-linear-gradient(-75deg, transparent 0px, transparent 10px, rgba(232,224,208,0.5) 10px, rgba(232,224,208,0.5) 11px); }
+
+/* payment flow */
+.rev-flow { display:flex; align-items:stretch; justify-content:center; gap:0; flex-wrap:wrap; max-width:1000px; margin:0 auto 22px; }
+.flow-step { position:relative; flex:1 1 0; min-width:170px; background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card2) 100%); border:1px solid rgba(201,168,76,0.15); padding:20px 18px 18px; text-align:center; }
+.flow-step + .flow-step { border-left:none; }
+.flow-step .fs-n { font-family:var(--font-head); font-size:10px; letter-spacing:0.3em; color:var(--gold-dim); text-transform:uppercase; margin-bottom:8px; }
+.flow-step .fs-amt { font-family:var(--font-head); font-weight:900; font-size:22px; color:var(--gold-bright); line-height:1; margin-bottom:6px; text-shadow:0 0 14px rgba(240,204,110,0.3); }
+.flow-step .fs-amt.cut { color:#c87070; }
+.flow-step .fs-label { font-family:var(--font-body); font-size:13px; color:var(--marble); margin-bottom:4px; }
+.flow-step .fs-sub { font-family:var(--font-body); font-style:italic; font-size:12px; color:var(--text-dim); line-height:1.4; }
+.flow-arrow { display:flex; align-items:center; justify-content:center; width:30px; color:var(--gold-dim); font-size:18px; flex:0 0 30px; }
+@media (max-width:760px){ .rev-flow{ flex-direction:column; } .flow-step + .flow-step{ border-left:1px solid rgba(201,168,76,0.15); border-top:none; } .flow-arrow{ width:auto; height:24px; transform:rotate(90deg); } }
+.flow-note { max-width:1000px; margin:0 auto; font-family:var(--font-body); font-style:italic; font-size:13px; color:var(--gold-dim); }
+
+/* one-sale breakdown bar */
+.sale-bar-wrap { max-width:1000px; margin:46px auto 0; }
+.sale-bar-title { font-family:var(--font-head); font-size:11px; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold-dim); margin-bottom:14px; }
+.sale-bar { display:flex; height:46px; border:1px solid rgba(201,168,76,0.3); overflow:hidden; font-family:var(--font-head); }
+.sale-seg { display:flex; align-items:center; justify-content:center; font-size:11px; letter-spacing:0.06em; color:#0a0a0f; font-weight:700; padding:0 6px; text-align:center; white-space:nowrap; overflow:hidden; }
+.sale-seg.steam { background:#7a3030; color:#f0d8d8; }
+.sale-seg.fees  { background:#6b5320; color:#f0e6c8; }
+.sale-seg.net   { background: linear-gradient(180deg,#e8c96e,#c9a84c); }
+.sale-legend { display:flex; flex-wrap:wrap; gap:18px; margin-top:12px; font-family:var(--font-body); font-size:13px; color:var(--text-dim); }
+.sale-legend span::before { content:'■'; margin-right:6px; }
+.sale-legend .lg-steam::before { color:#7a3030; }
+.sale-legend .lg-fees::before  { color:#6b5320; }
+.sale-legend .lg-net::before   { color:#c9a84c; }
+
+/* scenarios */
+.rev-scenarios { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; max-width:1100px; margin:50px auto 0; }
+@media (max-width:900px){ .rev-scenarios{ grid-template-columns:1fr; } }
+.scn-card { position:relative; background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card2) 100%); border:1px solid rgba(201,168,76,0.15); padding:28px 26px 24px; }
+.scn-card.base { border-color:var(--gold); box-shadow:0 0 40px rgba(201,168,76,0.12); }
+.scn-card::before,.scn-card::after{ content:''; position:absolute; width:20px; height:20px; border-top:2px solid var(--gold-dim); pointer-events:none; }
+.scn-card::before{ top:-1px; left:-1px; border-left:2px solid var(--gold-dim); }
+.scn-card::after{ top:-1px; right:-1px; border-right:2px solid var(--gold-dim); }
+.scn-tag { font-family:var(--font-head); font-size:10px; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold-dim); margin-bottom:4px; }
+.scn-name { font-family:var(--font-head); font-size:20px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--marble); margin-bottom:14px; }
+.scn-units { font-family:var(--font-head); font-weight:900; font-size:30px; color:var(--gold-bright); line-height:1; text-shadow:0 0 16px rgba(240,204,110,0.3); }
+.scn-units small { font-family:var(--font-body); font-style:italic; font-weight:400; font-size:13px; color:var(--text-dim); display:block; margin-top:4px; letter-spacing:0; }
+.scn-rows { list-style:none; margin:18px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.scn-rows li { display:flex; justify-content:space-between; gap:12px; font-family:var(--font-body); font-size:14px; color:var(--text-dim); border-bottom:1px dotted rgba(201,168,76,0.15); padding-bottom:8px; }
+.scn-rows li:last-child{ border-bottom:none; padding-bottom:0; }
+.scn-rows li.hl { color:var(--marble); font-size:15px; }
+.scn-rows .v { font-family:var(--font-head); letter-spacing:0.04em; white-space:nowrap; flex-shrink:0; }
+.scn-rows li.hl .v { color:var(--gold-bright); font-weight:700; }
+.scn-rows .v.neg { color:#c87070; }
+
+/* thresholds table */
+.rev-table-wrap { max-width:1000px; margin:48px auto 0; overflow-x:auto; }
+.rev-table { width:100%; border-collapse:collapse; font-family:var(--font-body); min-width:560px; }
+.rev-table caption { font-family:var(--font-head); font-size:11px; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold-dim); text-align:left; padding-bottom:14px; }
+.rev-table th { font-family:var(--font-head); font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:var(--gold-dim); text-align:left; padding:8px 12px; border-bottom:1px solid rgba(201,168,76,0.3); }
+.rev-table th.num,.rev-table td.num{ text-align:right; white-space:nowrap; }
+.rev-table td { font-size:14px; color:var(--text-dim); padding:11px 12px; border-bottom:1px solid rgba(201,168,76,0.1); line-height:1.4; }
+.rev-table tr:hover td{ background:rgba(201,168,76,0.04); }
+.rev-table td .v { font-family:var(--font-head); color:var(--gold-bright); font-size:13px; letter-spacing:0.04em; white-space:nowrap; }
+.rev-table tr.break td { background:rgba(93,187,93,0.07); }
+.rev-table tr.break td:first-child::before { content:'▸ '; color:#5dbb5d; }
+.rev-table td .milestone { color:var(--marble); }
+.rev-note { max-width:1000px; margin:14px auto 0; font-family:var(--font-body); font-style:italic; font-size:13px; color:var(--gold-dim); }
+
+.rev-expect { max-width:780px; margin:54px auto 0; text-align:center; padding-top:34px; border-top:1px solid rgba(201,168,76,0.15);
+  font-family:var(--font-body); font-style:italic; font-size:16.5px; line-height:1.75; color:var(--text-dim); }
+.rev-expect strong{ color:var(--gold); font-style:normal; }
+
+/* ============================================================
    SECTION 6 — NEWSLETTER / CTA
    ============================================================ */
 #newsletter {
@@ -1740,6 +1813,7 @@ footer {
     <li><a href="#character">Niko</a></li>
     <li><a href="#business">Modelos</a></li>
     <li><a href="#economy">Khrono Coin</a></li>
+    <li><a href="#revenue">Ingresos</a></li>
     <li><a href="#newsletter">Wishlist</a></li>
     <li><a href="brand-guide.html">Marca</a></li>
   </ul>
@@ -2442,6 +2516,153 @@ footer {
 </section>
 
 <!-- ============================================================
+     SECTION 5.8 — INGRESOS / CÓMO ENTRA LA PLATA
+     ============================================================ -->
+<section id="revenue">
+  <div class="marble-tex"></div>
+  <div class="business-inner">
+    <p class="section-label">Ingresos &amp; Proyección</p>
+    <h2 class="section-title">A COL$ 5.000 el capítulo: cómo entra la plata y cuánta esperamos.</h2>
+    <p class="business-intro">
+      La apuesta es <strong style="color:var(--gold-bright);">volumen, no margen</strong>: un precio de impulso —
+      menos que un pasaje de Transmilenio — que la gente paga sin pensarlo después de un TikTok. Aquí está el recorrido
+      de cada COL$ 5.000, lo que realmente llega al estudio, y tres escenarios de venta para el primer año del Capítulo 1.
+      <br><span style="font-size:13px;color:var(--gold-dim);letter-spacing:0.05em;">Steam / itch.io Colombia — mayo 2026, TRM ~$3.747 COP/USD. Cifras de referencia, no garantía.</span>
+    </p>
+
+    <!-- ===== PAYMENT FLOW ===== -->
+    <div class="rev-flow">
+      <div class="flow-step">
+        <div class="fs-n">Paso 1 · Cobro</div>
+        <div class="fs-amt">COL$ 5.000</div>
+        <div class="fs-label">El jugador paga en Steam</div>
+        <div class="fs-sub">Steam Wallet, tarjeta, PSE, Nequi, PayPal o efectivo (Efecty). Steam cobra en pesos.</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="fs-n">Paso 2 · Comisión</div>
+        <div class="fs-amt cut">− COL$ 1.500</div>
+        <div class="fs-label">Steam retiene el 30%</div>
+        <div class="fs-sub">Su tajada estándar + remite el IVA. Quedan ≈ COL$ 3.500 a nombre del estudio.</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="fs-n">Paso 3 · Payout</div>
+        <div class="fs-amt">COL$ 3.500</div>
+        <div class="fs-label">Pago mensual al banco</div>
+        <div class="fs-sub">Steam acumula y transfiere ~30–45 días tras cerrar el mes (mínimo US$100). itch.io: PayPal/Stripe casi inmediato.</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="fs-n">Paso 4 · Neto</div>
+        <div class="fs-amt">≈ COL$ 3.150</div>
+        <div class="fs-label">Lo que queda operativo</div>
+        <div class="fs-sub">Tras ~10% de reservas (retención en la fuente, comisión bancaria, cambio de divisa). Sobre esto se paga renta.</div>
+      </div>
+    </div>
+    <p class="flow-note">
+      Nada de esto necesita pasarela propia ni infraestructura de pagos: Steam e itch.io son el comercio, el procesador y el
+      recaudador de impuestos del consumidor. El estudio solo necesita una cuenta bancaria y declarar la renta sobre la utilidad.
+    </p>
+
+    <!-- ===== ONE-SALE BREAKDOWN BAR ===== -->
+    <div class="sale-bar-wrap">
+      <div class="sale-bar-title">Anatomía de una venta de COL$ 5.000</div>
+      <div class="sale-bar" role="img" aria-label="Reparto de una venta de 5.000 pesos: 30% Steam, 7% impuestos y comisiones, 63% neto al estudio">
+        <div class="sale-seg steam" style="width:30%">30% · COL$ 1.500</div>
+        <div class="sale-seg fees"  style="width:7%">7%</div>
+        <div class="sale-seg net"   style="width:63%">63% · ≈ COL$ 3.150 al estudio</div>
+      </div>
+      <div class="sale-legend">
+        <span class="lg-steam">Comisión de plataforma (Steam 30%)</span>
+        <span class="lg-fees">Reservas: IVA ya remitido, retención, comisión bancaria y de cambio (~7%)</span>
+        <span class="lg-net">Neto operativo del estudio</span>
+      </div>
+    </div>
+
+    <!-- ===== SALES SCENARIOS ===== -->
+    <div class="rev-scenarios">
+      <article class="scn-card">
+        <div class="scn-tag">Escenario A</div>
+        <h3 class="scn-name">Conservador</h3>
+        <div class="scn-units">6.000<small>unidades del Cap. 1 · primer año · sin viralidad</small></div>
+        <ul class="scn-rows">
+          <li>Ingreso bruto (lista)<span class="v">COL$ 30,0 M</span></li>
+          <li>− Comisión Steam 30%<span class="v neg">− COL$ 9,0 M</span></li>
+          <li>Llega al estudio<span class="v">COL$ 21,0 M</span></li>
+          <li>− Reservas e impuestos (~10%)<span class="v neg">− COL$ 2,1 M</span></li>
+          <li class="hl">Neto operativo<span class="v">≈ COL$ 18,9 M</span></li>
+        </ul>
+      </article>
+      <article class="scn-card base">
+        <div class="scn-tag">Escenario B · objetivo</div>
+        <h3 class="scn-name">Base</h3>
+        <div class="scn-units">25.000<small>unidades del Cap. 1 · primer año · wishlist + prensa indie</small></div>
+        <ul class="scn-rows">
+          <li>Ingreso bruto (lista)<span class="v">COL$ 125,0 M</span></li>
+          <li>− Comisión Steam 30%<span class="v neg">− COL$ 37,5 M</span></li>
+          <li>Llega al estudio<span class="v">COL$ 87,5 M</span></li>
+          <li>− Reservas e impuestos (~10%)<span class="v neg">− COL$ 8,75 M</span></li>
+          <li class="hl">Neto operativo<span class="v">≈ COL$ 78,7 M</span></li>
+        </ul>
+      </article>
+      <article class="scn-card">
+        <div class="scn-tag">Escenario C</div>
+        <h3 class="scn-name">Viral</h3>
+        <div class="scn-units">90.000<small>unidades del Cap. 1 · primer año · explota en TikTok / streams</small></div>
+        <ul class="scn-rows">
+          <li>Ingreso bruto (lista)<span class="v">COL$ 450,0 M</span></li>
+          <li>− Comisión Steam 30%<span class="v neg">− COL$ 135,0 M</span></li>
+          <li>Llega al estudio<span class="v">COL$ 315,0 M</span></li>
+          <li>− Reservas e impuestos (~10%)<span class="v neg">− COL$ 31,5 M</span></li>
+          <li class="hl">Neto operativo<span class="v">≈ COL$ 283,5 M</span></li>
+        </ul>
+      </article>
+    </div>
+    <p class="rev-note">
+      Y eso es <em>solo el Capítulo 1</em>. Si ~35% de quienes compran el Cap. 1 siguen comprando los cuatro capítulos
+      restantes a COL$ 5.000 (o el season pass de COL$ 14.900), el ingreso por jugador convertido sube de COL$ 3.500 a
+      COL$ 8.500–10.400 brutos a lo largo de 18 meses — sin contar lo opcional de los Khrono Coins. En el escenario base
+      eso son <strong style="color:var(--gold);">~COL$ 60 M adicionales</strong> repartidos entre los Caps. 2–5.
+    </p>
+
+    <!-- ===== UNIT THRESHOLDS ===== -->
+    <div class="rev-table-wrap">
+      <table class="rev-table">
+        <caption>Hitos por unidades vendidas del Capítulo 1 (a COL$ 5.000)</caption>
+        <thead>
+          <tr>
+            <th>Unidades vendidas</th>
+            <th class="num">Llega al estudio (tras Steam)</th>
+            <th>Qué desbloquea ese dinero</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="milestone">1.000</span></td><td class="num"><span class="v">≈ COL$ 3,5 M</span></td><td>Primer payout — valida que la tienda y los pagos funcionan.</td></tr>
+          <tr><td><span class="milestone">5.000</span></td><td class="num"><span class="v">≈ COL$ 17,5 M</span></td><td>Cubre música original, asset packs y tarifas de tienda del Cap. 1.</td></tr>
+          <tr class="break"><td><span class="milestone">~11.000</span></td><td class="num"><span class="v">≈ COL$ 38,5 M</span></td><td><strong>Punto de equilibrio</strong> — presupuesto del Cap. 1 estimado ≈ COL$ 35 M.</td></tr>
+          <tr><td><span class="milestone">25.000</span></td><td class="num"><span class="v">≈ COL$ 87,5 M</span></td><td>Financia la producción de los Caps. 3 y 4 sin buscar inversión externa.</td></tr>
+          <tr><td><span class="milestone">50.000</span></td><td class="num"><span class="v">≈ COL$ 175 M</span></td><td>Port a Nintendo Switch + equipo a tiempo completo durante un año.</td></tr>
+          <tr><td><span class="milestone">100.000</span></td><td class="num"><span class="v">≈ COL$ 350 M</span></td><td>La saga completa (5 eras + 4 finales) autofinanciada de principio a fin.</td></tr>
+        </tbody>
+      </table>
+      <p class="rev-note">
+        Referencias: a COL$ 5.000 el Cap. 1 es 1/7 del precio de <em>Hollow Knight</em> en Steam Colombia (≈ COL$ 37.500);
+        un plataformero indie con buena prensa en LatAm rompe sin esfuerzo las 10.000 unidades en su primer año.
+      </p>
+    </div>
+
+    <p class="rev-expect">
+      Lo que esperamos: que el precio <strong>desactive la decisión de compra</strong> — nadie piratea lo que cuesta como un
+      tinto — y que la viralidad haga el resto. Romper el punto de equilibrio con ~11.000 copias es alcanzable; el escenario
+      base de 25.000 deja al estudio con caja para producir los siguientes capítulos sin deuda ni inversores; y si una sola era
+      pega fuerte en redes, el escenario viral financia la saga entera. <strong>Volumen barato hoy, catálogo de cinco eras
+      pagado por los propios jugadores mañana.</strong>
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================
      SECTION 6 — NEWSLETTER / CTA
      ============================================================ -->
 <section id="newsletter">
@@ -2993,6 +3214,23 @@ gsap.fromTo('.tier-card',
   { opacity: 0, y: 24 },
   { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out',
     scrollTrigger: { trigger: '.coin-tiers', start: 'top 85%' } }
+);
+
+// ── Revenue section reveal
+gsap.fromTo('.flow-step',
+  { opacity: 0, y: 28 },
+  { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out',
+    scrollTrigger: { trigger: '.rev-flow', start: 'top 80%' } }
+);
+gsap.fromTo('.scn-card',
+  { opacity: 0, y: 36 },
+  { opacity: 1, y: 0, duration: 0.7, stagger: 0.15, ease: 'power2.out',
+    scrollTrigger: { trigger: '.rev-scenarios', start: 'top 82%' } }
+);
+gsap.fromTo('.sale-bar',
+  { scaleX: 0, transformOrigin: 'left center' },
+  { scaleX: 1, duration: 1.0, ease: 'power2.inOut',
+    scrollTrigger: { trigger: '.sale-bar-wrap', start: 'top 82%' } }
 );
 
 // 3D tilt on feature cards
